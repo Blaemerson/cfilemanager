@@ -1,4 +1,5 @@
 #include <dirent.h>
+#include <unistd.h>
 #include <ncurses.h>
 #include <stdlib.h>
 #include <string.h>
@@ -75,6 +76,15 @@ static const directory_t open_dir(char *path) {
     return dir;
 }
 
+void notify(WINDOW *win, char* msg) {
+    box(win, 0, 0);
+    mvwprintw(win, 1, 1, "%s", msg);
+    wrefresh(win);
+    getch();
+    wclear(win);
+    wrefresh(win);
+}
+
 
 int main(int argc, char **argv)
 {
@@ -88,35 +98,53 @@ int main(int argc, char **argv)
     getmaxyx(stdscr, stdscr_h, stdscr_w);
     WINDOW *win_left = newwin(stdscr_h, stdscr_w / 2, 0, 0);
     WINDOW *win_right = newwin(stdscr_h, stdscr_w / 2, 0, stdscr_w / 2);
+    WINDOW *notifier = newwin(stdscr_h / 3, stdscr_w / 6, (stdscr_h / 2) - (stdscr_h / 6), (stdscr_w / 2) - (stdscr_w / 12));
     refresh();
-
-    // making box border with default border styles
-    box(win_left, 0, 0);
-    box(win_right, 0, 0);
-
-    // move and print in window
-    mvwprintw(win_left, stdscr_h / 2, stdscr_w / 4, "win_left");
-    mvwprintw(win_right, stdscr_h / 2, stdscr_w / 4, "win_right");
 
     // refreshing the window
     wrefresh(win_left);
     wrefresh(win_right);
+    // wrefresh(notifier);
 
-    directory_t cwd = open_dir("/home/blake/");
+    char cwd[256];
+    getcwd(cwd, sizeof(cwd));
+    directory_t focused_dir = open_dir(cwd);
 
     WINDOW* focus = win_left;
-    while(getch() != 'q') {
-        cwd.print(&cwd, focus);
+    char c;
+    do {
+        focused_dir.print(&focused_dir, focus);
 
+        switch (c) {
+            case ('j'):
+                notify(notifier, "not implemented yet");
+                break;
+            case ('k'):
+                notify(notifier, "not implemented yet");
+                break;
+            case ('h'):
+                notify(notifier, "not implemented yet");
+                break;
+            case ('l'):
+                notify(notifier, "not implemented yet");
+                break;
+            case ('p'):
+                focus = win_right;
+                break;
+        }
+
+
+        // making box border with default border styles
+        box(win_left, 0, 0);
         wrefresh(win_left);
+        box(win_right, 0, 0);
         wrefresh(win_right);
 
-        focus = win_right;
-    };
+    } while ((c = getch()) && c != 'q');
 
     endwin();
 
-    free(cwd.files);
+    free(focused_dir.files);
 
     return 0;
 }
