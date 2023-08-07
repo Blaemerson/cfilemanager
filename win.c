@@ -1,24 +1,40 @@
 #include <curses.h>
 #include "win.h"
 
-WINDOW* make_win(float h_ratio, float w_ratio, float y_pos_percent,float x_pos_percent) {
+struct win_info get_win_size(WINDOW* win) {
     int stdscr_w;
     int stdscr_h;
-    getmaxyx(stdscr, stdscr_h, stdscr_w);
+    getmaxyx(win, stdscr_h, stdscr_w);
 
-    return newwin(stdscr_h * h_ratio, stdscr_w * w_ratio, stdscr_h * y_pos_percent, stdscr_w * x_pos_percent);
+    return (struct win_info){.w = stdscr_w, .h = stdscr_h};
+}
+
+WINDOW* make_win_relative(float h_ratio, float w_ratio, float y_pos_ratio,float x_pos_ratio) {
+    struct win_info winfo = get_winfo
+
+    return newwin(winfo.h * h_ratio, winfo.w * w_ratio, winfo.h * y_pos_ratio, winfo.w * x_pos_ratio);
 }
 
 WINDOW* make_win_centered(int h, int w) {
-    int stdscr_w;
-    int stdscr_h;
-    getmaxyx(stdscr, stdscr_h, stdscr_w);
+    struct win_info winfo = get_winfo
 
-    return newwin(h, w, (stdscr_h / 2) - (h / 2), (stdscr_w / 2) - (w / 2));
+    return newwin(h, w, (winfo.h / 2) - (h / 2), (winfo.w / 2) - (w / 2));
 }
 
 void redraw(WINDOW *win) {
     box(win, 0, 0);
+    wrefresh(win);
+}
+
+void resize(WINDOW *win, float h_ratio, float w_ratio, float y_pos_ratio, float x_pos_ratio) {
+    struct win_info winfo = get_winfo;
+
+    wresize(win, winfo.h * h_ratio, winfo.w * w_ratio);
+    mvwin(win, winfo.h * y_pos_ratio, winfo.w * x_pos_ratio);
+}
+
+void hide(WINDOW *win) {
+    wclear(win);
     wrefresh(win);
 }
 
@@ -28,6 +44,5 @@ void notify(WINDOW *win, char* msg) {
     mvwprintw(win, 2, 1, "Press any key...");
     wrefresh(win);
     getch();
-    wclear(win);
-    wrefresh(win);
+    hide(win);
 }
